@@ -1,6 +1,6 @@
 # Adonis API application
 
-This is the boilerplate for creating an API server in AdonisJs, it comes pre-configured with.
+API server com AdonisJS. Vem pré configurado com:
 
 1. Bodyparser
 2. Authentication
@@ -24,9 +24,9 @@ Utilize o comando `adonis serve --dev` para rodar o aplicativo criado. <br>
 
 Foi instaldo(`npm install -D eslint`) e configurado(`npx eslint --init`) o ESLint nas opções:
 
-1.Use a popular style guide
-2.Standard
-3.JSON
+- Use a popular style guide
+- Standard
+- JSON
 
 No arquivo .eslintrc, deve ser adicionado a seguinte configuração:
 
@@ -55,7 +55,7 @@ DB_DATABASE=modulo4adonis
 HASH_DRIVER=bcrypt
 ```
 
-Feito todas as configurações, basta rodar as migrations `adonis migration:run`.
+Feito todas as configurações, basta rodar as migrations `adonis migration:run`. <br>
 <small>Caso alguma configuração esteja errada, um erro será lançado no console.</small>
 
 ### Cadastro de usuário
@@ -93,7 +93,7 @@ const Route = use("Route");
 Route.post("/users", "UserController.store");
 ```
 
-No Adonis, não é necessário a importação explicita da controller para utilizar seus métodos.
+No Adonis, não é necessário a importação explicita da controller para utilizar seus métodos. <br>
 <small>obs. O require no adonis é feito através do use('pck')</small>
 
 Para listar as rotas existentes na aplicação, basta utilizar o comando: `adonis route:list`.
