@@ -112,3 +112,18 @@ Para capturar os dados enviandos no body do post, basta adicionar o parametro ({
 ```
 
 ### Autenticação JWT
+
+Para autenticar o usuário foi criado o controller Session `adonis maker:controller Session`, com o método store() que recebe os dados da requisição, realiza a autenticação e retorna um tokn JWT:
+
+```javascript
+  async store ({ request, response, auth }) {
+    const { email, password } = request.all()
+
+    // Gera um token JWT
+    const token = await auth.attempt(email, password)
+
+    return token
+  }
+```
+
+Obs. As configurações de campos a serem usados, criptografia etc estão presente no arquivo `./config/auth`, então esse arquivo pode ser alterado caso a API precise de alguma informação/alteração que não esteja presente no padrão criado pelo Adonis para autenticação de usuários.
