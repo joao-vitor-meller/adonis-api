@@ -127,3 +127,69 @@ Para autenticar o usuário foi criado o controller Session `adonis maker:control
 ```
 
 Obs. As configurações de campos a serem usados, criptografia etc estão presente no arquivo `./config/auth`, então esse arquivo pode ser alterado caso a API precise de alguma informação/alteração que não esteja presente no padrão criado pelo Adonis para autenticação de usuários.
+
+### Recuperação de senha
+
+Para recuperar a senha foi criado a ForgotPasswordController. <br>
+obs. É bom que as controllers não passem dos 5 métodos principais do HTTP, para assim manter a organização e a estrutura do projeto. Por isso uma controller deve conter o seu "próprio CRUD". <br>
+
+O método store de ForgotPasswordController é reponsável por solicitar o reset de senha. Ao solicitar o reset, será criado um token na tabela de users, com um prazo de 2 dias para ser utilizado. <br>
+Para isso é necessário adicionar o campo token e token_created_at na tabela users.
+
+Para realizar as alterações na tabela, é necessário rodar uma migration, mas como o código não foi públicado e nem compartilhado com outros dev(equipe), foi feito uma alteração na migration de users criado no inicio do projeto. <br>
+Para rodar a nova migration, antes é necessário desfazer(rollback) a primeira migration. Para isso é só rodar o comando `adonis migration:rollback`.
+
+Com isso o Adonis exclui as tabelas ja criadas, para assim rodar a migration novamente com os campos novos que serão adicionados em migrations/hash_user.js:
+
+```javascript
+  up () {
+    this.create('users', table => {
+      table.increments()
+      table
+        .string('username', 80)
+        .notNullable()
+        .unique()
+      table
+        .string('email', 254)
+        .notNullable()
+        .unique()
+      table.string('password', 60).notNullable()
+      table.string('token')
+      table.timestamp('token_created_at')
+      table.timestamps()
+    })
+  }
+```
+
+Feito as atlerações no banco, é necessário rodar a migration novamente para criar as tabelas no banco com o comando `adonis migration:run`.
+
+O método store, recebe o email solicitado no request e tenta encontra-lo na tabela users. Caso encontra, atualiza a coluna token e token_created_at, se não retorna um erro para o front:
+
+```javascript
+class ForgotPasswordController {
+  async store({ request, response }) {
+    try {
+      const email = request.input("email");
+
+      /**
+       * @description: findByOrFail tenta encontrar na coluna email o valor request.email.
+       * caso não encontre, retorna um erro, caindo no catch(err)
+       */
+      const user = await User.findByOrFail("email", email);
+
+      user.token = crypto.randomBytes(10).toString("hex");
+      user.token_created_at = new Date();
+
+      await user.save();
+    } catch (err) {
+      return response.status(err.status).send({
+        error: {
+          message: "Algo deu errado. Verifique o e-mail e tente novamente"
+        }
+      });
+    }
+  }
+}
+```
+
+### Enviando e-mail
