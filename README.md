@@ -193,3 +193,60 @@ class ForgotPasswordController {
 ```
 
 ### Enviando e-mail
+
+Para enviar e-mail pelo adonis, é necessário a instalação da dependência `adonis install @adonisjs/mail`. <br>
+Obs. Algumas dependências do adonis, são feito e configurada por sua CLI.
+
+Feito a instalação, irá abrir uma página web com informações de configuração, são elas:
+
+Em start/App.js, adicionar `@adonisjs/mail/providers/MailProvider` em providers. <br>
+Foi adicionado automaticamente o arquivo config/mail.js, que irá conter todas as configurações de envio de e-mail pelo adonis.
+
+Obs. Para envio de e-mails de test, foi utilizado o mailtrap.io.
+
+Após a configuração das váriveis de e-mail no .env do projeto é necessário importar o Mail do Adonis na controller ForgotPassword, e chamar o método de envio de e-mail após adicionar o token de reset na tabela de users:
+
+```javascript
+const Mail = use("Mail");
+
+...
+
+await user.save()
+      await Mail.send([''], {}, message => {
+        message
+          .to(user.email)
+          .from('maiconrs95@gmail.com', 'Maicon | aaa')
+          .subject('Recuperação de senha')
+      })
+```
+
+o send recebe 3 params, são eles:
+
+1. Template do e-mail
+2. Dados que serão passados para o template
+3. Informações da mensagem, como destinatário, titulo etc
+
+Para utilizar templates dinâmicos, foi adicionado nos providers(start/App.js) o '@adonisjs/framework/providers/ViewProvider'. Depois disso, foi adicionado no projeto a pasta/arquivo `resources/views/emails/forgot_password.edge`.
+
+Obs. .edge é a viewengine criada pela equipe do adonis.
+
+Em forgot_password.edge podemos adicionar o template da mensagem. Assim como as váriaves necessáiras para montagem do e-mail.
+
+Feito todas as configurações, basta importar o template do e-mail no método de envio:
+
+```javascript
+await Mail.send(
+  ["emails.forgot_password"],
+  {
+    email,
+    token: user.token,
+    link: `${request.input("request_url")}?token${user.token}`
+  },
+  message => {
+    message
+      .to(user.email)
+      .from("maiconrs95@gmail.com", "Maicon | aaa")
+      .subject("Recuperação de senha");
+  }
+);
+```
