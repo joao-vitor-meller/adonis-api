@@ -250,3 +250,43 @@ await Mail.send(
   }
 );
 ```
+
+### Resetando a senha
+
+O fluxo de reset de senha é simples, recebe o token e password, verifica a validade do token e caso não tenha expirado altera a senha do usuário.
+
+Obs. Para verificar a validade do token foi usado a lib moment.
+Para isso, foi adicionado o método update em ForgotPasswordController:
+
+```javascript
+  async update ({ request, response }) {
+    try {
+      const { token, password } = request.all()
+
+      const user = await User.findByOrFail('token', token)
+
+      // Valida se a data de criação do token nao expirou o prazo de 2 dias
+      const tokenExpired = moment()
+        .subtract('2', 'days')
+        .isAfter(user.token_created_at)
+
+      if (tokenExpired) {
+        return response
+          .status(401)
+          .send({ error: { message: 'O token de recuperação está expirado.' } })
+      }
+
+      user.token = null
+      user.token_created_at = null
+      user.password = password
+
+      await user.save()
+    } catch (err) {
+      return response
+        .status(err.status)
+        .send({ error: { message: 'Algo não deu certo. Tente novamente.' } })
+    }
+  }
+```
+
+### Upload de arquivos
