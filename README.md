@@ -290,3 +290,84 @@ Para isso, foi adicionado o método update em ForgotPasswordController:
 ```
 
 ### Upload de arquivos
+
+A aplicação tem uma Model e uma Controller exclusivas para tratar arquivos. Dessa maneira, a lógica de upload fica separada do envio de informação(JSON) evitando verbosidade no código e centralizando tudo que for upload em um único endpoint.
+
+Para iniciar, foi criado uma model e controller utilizando o adonis `adonis make:model File -m -c`, onde -m cria a migration e -c a controller. <br>
+
+Feito isso, foram adicionados alguns campos na migration File:
+
+```javascript
+"use strict";
+
+/** @type {import('@adonisjs/lucid/src/Schema')} */
+const Schema = use("Schema");
+
+class FileSchema extends Schema {
+  up() {
+    this.create("files", table => {
+      table.increments();
+      table.string("file").notNullable();
+      table.string("name").notNullable();
+      table.string("type", 20);
+      table.string("subtype", 20);
+      table.timestamps();
+    });
+  }
+
+  down() {
+    this.drop("files");
+  }
+}
+
+module.exports = FileSchema;
+```
+
+e depois, é necessário rodar as migratrions para criar a nova tabela `adonis migration:run`. <br>
+
+Feito issom, na file controller é necessário importar a File model e os Helpers do adonis para indicar o destino do arquivo:
+
+```javascript
+const File = use("App/Models/File");
+const Helpers = use("Helpers");
+```
+
+Obs. Como a controller foi criada pela CLI do adonis, ela vem 'pré' programada com todos os métodos possíveis, mas no nosso caso vai ser utilizado apenas o store:
+
+```javascript
+  async store ({ request, response }) {
+    try {
+      if (!request.file('file')) return
+
+      // CAPTURA O ARQUIVO DA REQUISIÇÃO E O RENOMEIA PARA ENVIAR A PASTA LOCAL
+      const upload = request.file('file', { size: '2mb' })
+      const filename = `${Date.now()}.${upload.subtype}`
+
+      // SALVA O ARQUIVO
+      await upload.move(Helpers.tmpPath('uploads'), {
+        name: filename
+      })
+
+      // CASO TENHA ERROS EM ENVIAR O ARQUIVO PARA A PASTA, A API EMITE UM ERRO(catch(err))
+      if (!upload.moved()) {
+        throw upload.error()
+      }
+
+      // SALVA OS DADOS DO ARQUIVO NA TABELA FILE
+      const file = await File.create({
+        file: filename,
+        name: upload.clientName,
+        type: upload.type,
+        subtype: upload.subtype
+      })
+
+      return file
+    } catch (err) {
+      return response
+        .status(err.status)
+        .send({ error: { message: 'Erro no upload do arquivo' } })
+    }
+  }
+```
+
+### Visualizar arquivos
