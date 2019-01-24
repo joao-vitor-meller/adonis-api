@@ -74,7 +74,7 @@ Depois disso foi adicionado o método store em UserController:
 ```javascript
 "use strict";
 
-const User = user("App/Models/User");
+const User = use("App/Models/User");
 
 class UserController {
   async store() {}
@@ -94,7 +94,7 @@ Route.post("/users", "UserController.store");
 ```
 
 No Adonis, não é necessário a importação explicita da controller para utilizar seus métodos. <br>
-<small>obs. O require no adonis é feito através do use('pck')</small>
+<small>obs. O require no adonis é feito através do use('pckg')</small>
 
 Para listar as rotas existentes na aplicação, basta utilizar o comando: `adonis route:list`.
 
@@ -323,9 +323,9 @@ class FileSchema extends Schema {
 module.exports = FileSchema;
 ```
 
-e depois, é necessário rodar as migratrions para criar a nova tabela `adonis migration:run`. <br>
+e depois, é necessário rodar as migratrions para criar a nova tabela `adonis migration:run`.
 
-Feito issom, na file controller é necessário importar a File model e os Helpers do adonis para indicar o destino do arquivo:
+Feito isso, na file controller é necessário importar a File model e os Helpers do adonis para indicar o destino do arquivo:
 
 ```javascript
 const File = use("App/Models/File");
@@ -371,3 +371,34 @@ Obs. Como a controller foi criada pela CLI do adonis, ela vem 'pré' programada 
 ```
 
 ### Visualizar arquivos
+
+Para exibir os arquivo, foi criado a rota GET /files/:id e o método show em FileController:
+
+```javascript
+  async show ({ params, response }) {
+    const file = await File.findOrFail(params.id)
+
+    return response.download(Helpers.tmpPath(`uploads/${file.file}`))
+  }
+```
+
+Para automatizar a "montagem" da url da imagem, foi adicionado um campo virtual(campos que não existem no BD) na model File. Onde pega o id passado, a url do app configurada no .Env e retorna a url de exibição do arquivo:
+
+```javascript
+class File extends Model {
+  /**
+   * Cria um campo virtual(não existe no BD) com o caminho da imagem
+   * Dessa maneira não é necessário montar a url no front, basta retornar o campo virtual
+   */
+  static get computed() {
+    return ["url"];
+  }
+
+  /**
+   * Utiliza o Env APP_URL para montar o campo virtual
+   */
+  getUrl({ id }) {
+    return `${Env.get("APP_URL")}/files/${id}`;
+  }
+}
+```

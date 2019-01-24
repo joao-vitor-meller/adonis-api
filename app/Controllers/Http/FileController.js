@@ -4,6 +4,20 @@ const File = use('App/Models/File')
 const Helpers = use('Helpers')
 
 class FileController {
+  /**
+   * Return image file
+   * GET files/:id
+   */
+  async show ({ params, response }) {
+    const file = await File.findOrFail(params.id)
+
+    return response.download(Helpers.tmpPath(`uploads/${file.file}`))
+  }
+
+  /**
+   * Create/save new file
+   * POST files
+   */
   async store ({ request, response }) {
     try {
       if (!request.file('file')) return
