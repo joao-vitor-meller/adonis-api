@@ -402,3 +402,48 @@ class File extends Model {
   }
 }
 ```
+
+### Criando models de projetos/tarefas
+
+para criar as Models, Controllers e Migration `adonis make:model Project\Task -m -c`.]
+
+Após criar e adicionar os campos e relacionamentos nas migrations Task e Project, basta rodar as migrations para o Adonis criar os campos no banco de dados.
+
+### Relacionamentos
+
+Por padrão, após rodar as migrations, o Adonis não entende os relacionamentos criados, que devem ser passados para as models, ex:
+
+```javascript
+"use strict";
+
+/** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
+const Model = use("Model");
+
+class Project extends Model {
+  user() {
+    // Um projeto pertence a um usuário
+    return this.belongsTo("App/Models/User");
+  }
+
+  tasks() {
+    // Um projeto pode conter várias tasks
+    return this.hasMany("App/Models/Task");
+  }
+}
+
+module.exports = Project;
+```
+
+A model User também recebeu dois relacionamentos após a adição das novas tabelas:
+
+```javascript
+  projects () {
+    return this.hasMany('App/Models/Project')
+  }
+
+  tasks () {
+    return this.hasMany('App/Models/Task')
+  }
+```
+
+Para mais, basta consultar a documentação do AdonisJS.

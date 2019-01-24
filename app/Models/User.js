@@ -27,6 +27,17 @@ class User extends Model {
   tokens () {
     return this.hasMany('App/Models/Token')
   }
+
+  /**
+   * Relaciona o usuário com Projects e Tasks
+   */
+  projects () {
+    return this.hasMany('App/Models/Project')
+  }
+
+  tasks () {
+    return this.hasMany('App/Models/Task')
+  }
 }
 
 module.exports = User
