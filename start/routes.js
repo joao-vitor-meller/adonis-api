@@ -20,7 +20,7 @@ Route.put('/passwords', 'ForgotPasswordController.update')
 Route.get('/files/:id', 'FileController.show')
 
 /**
- * AUTH
+ * @description: AUTH GROUP
  */
 Route.group(() => {
   /**
@@ -32,4 +32,10 @@ Route.group(() => {
    * PROJECTS
    */
   Route.resource('/projects', 'ProjectController').apiOnly()
+
+  /**
+   * TASKS
+   * /projects.tasks para setar o id de projects como default em todas as rotas filhas de tasks
+   */
+  Route.resource('/projects.tasks', 'TaskController').apiOnly()
 }).middleware(['auth'])

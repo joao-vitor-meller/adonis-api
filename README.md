@@ -447,3 +447,29 @@ A model User também recebeu dois relacionamentos após a adição das novas tab
 ```
 
 Para mais, basta consultar a documentação do AdonisJS.
+
+### CRUD e rotas protegidas
+
+Para executar o CRUD está sendo utilizado os métodos GET, POST, PUT e DELETE nas controllers Project e Task.
+
+No Adonis, podemos criar um group passando um middleware para rotas que necessitam de autenticação(auth). E também é possível criar sub rotas de form automatizada passando `rotaPai.rotaFilha` para o Route.resource:
+
+```javascript
+Route.group(() => {
+  /**
+   * FILES
+   */
+  Route.post("/files", "FileController.store");
+
+  /**
+   * PROJECTS
+   */
+  Route.resource("/projects", "ProjectController").apiOnly();
+
+  /**
+   * TASKS
+   * /projects.tasks para setar o id de projects como default em todas as rotas filhas de tasks
+   */
+  Route.resource("/projects.tasks", "TaskController").apiOnly();
+}).middleware(["auth"]);
+```
