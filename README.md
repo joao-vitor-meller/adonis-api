@@ -473,3 +473,5 @@ Route.group(() => {
   Route.resource("/projects.tasks", "TaskController").apiOnly();
 }).middleware(["auth"]);
 ```
+
+### Utilizando o validator

@@ -35,7 +35,7 @@ Route.group(() => {
 
   /**
    * TASKS
-   * /projects.tasks para setar o id de projects como default em todas as rotas filhas de tasks
+   * projects.tasks para setar o id de projects como default em todas as rotas filhas de tasks
    */
   Route.resource('/projects.tasks', 'TaskController').apiOnly()
 }).middleware(['auth'])
