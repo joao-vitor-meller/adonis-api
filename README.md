@@ -511,4 +511,38 @@ module.exports = User;
 
 ### Lidando com excessões
 
-`adonis make:ehandler`
+O Adonis já possui um método para lidar com exceções, o `adonis make:ehandler`. Com isso foi criado o arquivo app/exceptions/Handler.js.
+
+Ele recebe as configurações de erro global da aplicação. Também foi utilizado o youch para formatar o erro em JSON:
+
+```javascript
+const Env = use('Env')
+const Youch = use('Youch')
+const BaseExceptionHandler = use('BaseExceptionHandler')
+
+...
+
+  async handle (error, { request, response }) {
+    /**
+     * Valida o error do validation
+     */
+    if (error.name === 'ValidationException') {
+      // retorna o erro em formato JSON para o front-end
+      return response.status(error.status).send(error.messages)
+    }
+
+    // Retorno mais detalhado em ambiente de DEV
+    if (Env.get('NODE_ENV') === 'development') {
+      const youch = new Youch(error, request.request)
+      const errorJSON = await youch.toJSON()
+
+      return response.status(error.status).send(errorJSON)
+    }
+
+    return response.status(error.status)
+  }
+```
+
+O método foi programado para veirificar se o erro é do ValidationException(validator), e caso seja será retornado ao usuário.
+
+Também existe uma verificação para confirmar o ambiente de desenvolvimento, evitando retorno de dados "sensíveis" em deploy.
