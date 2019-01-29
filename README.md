@@ -468,10 +468,43 @@ Route.group(() => {
 
   /**
    * TASKS
-   * /projects.tasks para setar o id de projects como default em todas as rotas filhas de tasks
+   * projects.tasks para setar o id de projects como default em todas as rotas filhas de tasks
    */
   Route.resource("/projects.tasks", "TaskController").apiOnly();
 }).middleware(["auth"]);
 ```
 
 ### Utilizando o validator
+
+O validator é uma lib externa, então deve ser instalada `adonis install @adonisjs/validator/providers/ValidatorProvider`.
+
+Feito a instalação, utilizamos a CLI do adonis para criar o validator `adonis make:validator User`. <br>
+Obs. Por convenção, o nome do validator pode ser o mesmo da Model. E caso precise de um Validator para cada rota referente a um model/controller é possível fazer adonis `make:validator User/nomedarota`.
+
+Foi criado o arquivo /App/Validators/User.js:
+
+```javascript
+"use strict";
+
+class User {
+  // Valida todos os campos enviados no body. O default é false.
+  get validateAll() {
+    return true;
+  }
+
+  /**
+   * required: obrigatório
+   * unique:table: o campo não pode se repetir na tabela
+   * confirmed:
+   */
+  get rules() {
+    return {
+      username: "required|unique:users",
+      email: "required|email|unique:users",
+      password: "required|confirmed"
+    };
+  }
+}
+
+module.exports = User;
+```
