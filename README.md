@@ -16,7 +16,7 @@ Normalmente usado em aplicação grandes ou que irão crescer exponecialmente.
 
 ### Setup
 
-Para utilizar a CLI do Adonis, basta instala-lá localmente `npm install -g @adonis/cli`. <br>
+Para utilizar a CLI do Adonis, basta instala-lá localmente `npm install -g @adonisjs/cli`. <br>
 Após a instalação já deve ser possível ver os comandos do Adonis com o comando `adonis new -h`. <br>
 Basicamente, o comando `adonis new` recebe apenas um parâmetro, o nome do app. Mas também é possível passar alguma das opções presente em `adonis new -h` como --api-only, slim etc...
 
