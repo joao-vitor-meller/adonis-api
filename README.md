@@ -508,3 +508,7 @@ class User {
 
 module.exports = User;
 ```
+
+### Lidando com excessões
+
+`adonis make:ehandler`
