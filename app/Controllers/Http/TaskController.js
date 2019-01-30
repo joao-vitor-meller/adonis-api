@@ -48,7 +48,7 @@ class TaskController {
    * Update task details.
    * PUT or PATCH tasks/:id
    */
-  async update ({ params, request, response }) {
+  async update ({ params, request }) {
     const task = await Task.findOrFail(params.id)
     const data = request.only([
       'user_id',
@@ -59,6 +59,7 @@ class TaskController {
     ])
 
     await task.merge({ ...data, project_id: params.projects_id })
+    await task.save()
 
     return task
   }

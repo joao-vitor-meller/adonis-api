@@ -4,6 +4,15 @@
 const Model = use('Model')
 
 class Task extends Model {
+  /**
+   * Envia um email para o usuário vinculado a uma task
+   */
+  static boot () {
+    super.boot()
+    this.addHook('afterCreate', 'TaskHook.sendNewTaskMail')
+    this.addHook('beforeUpdate', 'TaskHook.sendNewTaskMail')
+  }
+
   project () {
     return this.belongsTo('App/Models/Project')
   }

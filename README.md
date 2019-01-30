@@ -546,3 +546,128 @@ const BaseExceptionHandler = use('BaseExceptionHandler')
 O método foi programado para veirificar se o erro é do ValidationException(validator), e caso seja será retornado ao usuário.
 
 Também existe uma verificação para confirmar o ambiente de desenvolvimento, evitando retorno de dados "sensíveis" em deploy.
+
+### Validando as rotas
+
+O Adonis possui internamente o comando `adonis make:validator modelName` para que seja possível validar as rotas do APP.
+
+Os arquivos de validação são gerados em app/validator e possui a seguinte estrutura:
+
+```javascript
+"use strict";
+
+const Antl = use("Antl");
+
+class User {
+  // Valida todos os campos enviados no body. O default é false.
+  get validateAll() {
+    return true;
+  }
+
+  /**
+   * required: obrigatório
+   * unique:table: o campo não pode se repetir na tabela
+   * confirmed:
+   */
+  get rules() {
+    return {
+      username: "required|unique:users",
+      email: "required|email|unique:users",
+      password: "required|confirmed"
+    };
+  }
+
+  /**
+   * Usado a lib antl para internacionalizar as Exceptions lançadas.
+   * Com essa lib é possível traduzir os erros ao retornar para o front end.
+   */
+  get messages() {
+    return Antl.list("validation");
+  }
+}
+
+module.exports = User;
+```
+
+Feito isso, nas rotas é necessário adicionar qual validador será utilizado na rota acessada:
+
+```javascript
+Route.put("passwords", "ForgotPasswordController.update").validator(
+  "ResetPassword"
+);
+```
+
+Obs. Quando for utilizado as rotas automatizadas, a forma de passar o validador muda:
+
+```javascript
+Route.resource("projects.tasks", "TaskController")
+  .apiOnly()
+  .validator(new Map([[["projects.tasks.store"], ["Task"]]]));
+```
+
+### Utilizando hooks para envio de e-mail
+
+Um hook pode ser disparado sempre que uma operação for executada no banco de dados pela Model. E dessa forma conseguimos automatizar algumas operações do sistema.
+
+Foi criado uma hook `adonis make:hook Task`, onde sempre que uma Task for adicionada ou alterada e possuir um id de usuário com indicação pra essa tarefa, esse usuário indicado receberá um e-mail informado algumas coisas sobre a tarefa, e caso haja algum arquivo realcionando com a taks, sera enviado em anexo.
+
+Para isso na Model Task foi adicionado o método boot(é executado na instância da classe): <br>
+Esse método chama o hook antes da criação da task, ou depois da mesma ser alterada.
+
+```javascript
+  static boot () {
+    super.boot()
+    this.addHook('afterCreate', 'TaskHook.sendNewTaskMail')
+    this.addHook('beforeUpdate', 'TaskHook.sendNewTaskMail')
+  }
+```
+
+O hook foi adicionando em App/Models/Hook:
+
+```javascript
+"use strict";
+
+const Mail = use("Mail");
+const Helpers = use("Helpers");
+const TaskHook = (exports = module.exports = {});
+
+TaskHook.sendNewTaskMail = async taskInstance => {
+  /**
+   * Verifica se a task possui um user_id no momento de sua criação, ou se foi alterado em algum momento na aplicação
+   * Caso não tenha um user_id, o hook não será disparado
+   * Quando o hook é disparado, um e-mail sera enviado ao usuário que deve realizar a Task em questão, e caso a task possua um
+   * arquivo realcionado, esse será enviado em anexo
+   */
+  if (!taskInstance.user_id && !taskInstance.dirty.user_id) return;
+
+  /**
+   * Consulta os relacionamentos da task para enviar o e-mail ao usuário responsável pela mesma
+   */
+  const { email, username } = await taskInstance.user().fetch();
+  const file = await taskInstance.file().fetch();
+  const { title } = taskInstance;
+
+  await Mail.send(
+    ["emails.new_task"],
+    {
+      username,
+      title,
+      hasAttachment: !!file
+    },
+    message => {
+      message
+        .to(email)
+        .from("maiconrs95@gmail.com", "Maicon")
+        .subject("Uma nova tarefa foi adicionada em sua lista.");
+
+      if (file) {
+        message.attach(Helpers.tmpPath(`uploads/${file.file}`), {
+          filename: file.name
+        });
+      }
+    }
+  );
+};
+```
+
+Para mais consulte database-hooks na documentação do Adonis.
