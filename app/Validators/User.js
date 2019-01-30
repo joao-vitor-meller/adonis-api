@@ -1,5 +1,7 @@
 'use strict'
 
+const Antl = use('Antl')
+
 class User {
   // Valida todos os campos enviados no body. O default é false.
   get validateAll () {
@@ -17,6 +19,10 @@ class User {
       email: 'required|email|unique:users',
       password: 'required|confirmed'
     }
+  }
+
+  get messages () {
+    return Antl.list('validation')
   }
 }
 

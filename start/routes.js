@@ -5,8 +5,8 @@ const Route = use('Route')
 /**
  * AUTENTICAÇÃO
  */
-Route.post('/users', 'UserController.store').validator('User')
-Route.post('/sessions', 'SessionController.store').validator('Sessions')
+Route.post('users', 'UserController.store').validator('User')
+Route.post('sessions', 'SessionController.store').validator('Sessions')
 
 /**
  * PASSWORD RESET
@@ -21,7 +21,7 @@ Route.put('passwords', 'ForgotPasswordController.update').validator(
 /**
  * FILES
  */
-Route.get('/files/:id', 'FileController.show')
+Route.get('files/:id', 'FileController.show')
 
 /**
  * @description: AUTH GROUP
@@ -30,7 +30,7 @@ Route.group(() => {
   /**
    * FILES
    */
-  Route.post('/files', 'FileController.store')
+  Route.post('files', 'FileController.store')
 
   /**
    * PROJECTS
