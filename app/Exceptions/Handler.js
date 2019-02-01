@@ -1,7 +1,7 @@
 'use strict'
 
 const Env = use('Env')
-const Youch = use('Youch')
+// const Youch = use('Youch')
 const BaseExceptionHandler = use('BaseExceptionHandler')
 
 /**
@@ -33,10 +33,11 @@ class ExceptionHandler extends BaseExceptionHandler {
 
     // Retorno mais detalhado em ambiente de DEV
     if (Env.get('NODE_ENV') === 'development') {
-      const youch = new Youch(error, request.request)
-      const errorJSON = await youch.toJSON()
+      console.log(request)
+      // const youch = new Youch(error, request.request)
+      // const errorJSON = await youch.toJSON()
 
-      return response.status(error.status).send(errorJSON)
+      return response.status(error.status).send(error)
     }
 
     return response.status(error.status)
@@ -52,7 +53,7 @@ class ExceptionHandler extends BaseExceptionHandler {
    *
    * @return {void}
    */
-  async report (error, { request }) {}
+  // async report (error, { request }) {}
 }
 
 module.exports = ExceptionHandler
