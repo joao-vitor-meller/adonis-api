@@ -10,13 +10,14 @@ API server com AdonisJS. Vem pré configurado com:
 
 ### Adonis JS
 
-O Adonis é um framework NodeJS para criação de aplicações MVC e RESTFull.
+O Adonis é um framework nodejs usado na criação de aplicações MVC e APIRest.
 
-Normalmente usado em aplicação grandes ou que irão crescer exponecialmente.
+Normalmente usado em aplicação grandes ou que irão crescer exponencialmente.
 
 ### Setup
 
-Para utilizar a CLI do Adonis, basta instala-lá localmente `npm install -g @adonisjs/cli`. <br>
+Para utilizar a CLI do Adonis, basta instala-lá localmente `npm install -g @adonisjs/cli`.
+
 Após a instalação já deve ser possível ver os comandos do Adonis com o comando `adonis new -h`. <br>
 Basicamente, o comando `adonis new` recebe apenas um parâmetro, o nome do app. Mas também é possível passar alguma das opções presente em `adonis new -h` como --api-only, slim etc...
 
@@ -55,13 +56,13 @@ DB_DATABASE=modulo4adonis
 HASH_DRIVER=bcrypt
 ```
 
-Feito todas as configurações, basta rodar as migrations `adonis migration:run`. <br>
+Feito todas as configurações e criado as migrations, basta rodar `adonis migration:run` no console. <br>
 <small>Caso alguma configuração esteja errada, um erro será lançado no console.</small>
 
 ### Cadastro de usuário
 
 Quando uma aplicação Adonis é iniciada utilizando seu CLI, ela ja vem com a model user e tokens, por serem comuns em aplicações. <br>
-Para iniciarmos as requicições, é necessário uma Controller, criada através do comando: `adonis make:controller User`. <br>
+Para iniciarmos as requisições, é necessário uma Controller, criada através do comando: `adonis make:controller User`. <br>
 Será mostrado duas opções:
 
 1. For HTTP requests (Para requisições GET, POST, PUT, DELETE)
@@ -113,7 +114,7 @@ Para capturar os dados enviandos no body do post, basta adicionar o parametro ({
 
 ### Autenticação JWT
 
-Para autenticar o usuário foi criado o controller Session `adonis maker:controller Session`, com o método store() que recebe os dados da requisição, realiza a autenticação e retorna um tokn JWT:
+Para autenticar o usuário foi criado a controller Session `adonis maker:controller Session`, com o método store() que recebe os dados da requisição, realiza a autenticação e retorna um tokn JWT:
 
 ```javascript
   async store ({ request, response, auth }) {
@@ -126,7 +127,7 @@ Para autenticar o usuário foi criado o controller Session `adonis maker:control
   }
 ```
 
-Obs. As configurações de campos a serem usados, criptografia etc estão presente no arquivo `./config/auth`, então esse arquivo pode ser alterado caso a API precise de alguma informação/alteração que não esteja presente no padrão criado pelo Adonis para autenticação de usuários.
+Obs. As configurações de campos a serem usados, criptografia etc estão presente no arquivo `./config/auth`, então esse arquivo pode ser alterado caso a API precise de alguma informação/alteração que não esteja presente no padrão criado pelo Adonis para autenticação.
 
 ### Recuperação de senha
 
@@ -139,7 +140,7 @@ Para isso é necessário adicionar o campo token e token_created_at na tabela us
 Para realizar as alterações na tabela, é necessário rodar uma migration, mas como o código não foi públicado e nem compartilhado com outros dev(equipe), foi feito uma alteração na migration de users criado no inicio do projeto. <br>
 Para rodar a nova migration, antes é necessário desfazer(rollback) a primeira migration. Para isso é só rodar o comando `adonis migration:rollback`.
 
-Com isso o Adonis exclui as tabelas ja criadas, para assim rodar a migration novamente com os campos novos que serão adicionados em migrations/hash_user.js:
+Com isso o Adonis exclui as tabelas já criadas, para assim rodar a migration novamente com os campos novos que serão adicionados em migrations/hash_user.js:
 
 ```javascript
   up () {
@@ -325,7 +326,7 @@ module.exports = FileSchema;
 
 e depois, é necessário rodar as migratrions para criar a nova tabela `adonis migration:run`.
 
-Feito isso, na file controller é necessário importar a File model e os Helpers do adonis para indicar o destino do arquivo:
+Na file controller é necessário importar a File model e os Helpers do adonis para indicar o destino do arquivo:
 
 ```javascript
 const File = use("App/Models/File");
@@ -671,3 +672,88 @@ TaskHook.sendNewTaskMail = async taskInstance => {
 ```
 
 Para mais consulte database-hooks na documentação do Adonis.
+
+### Salvando relacionamentos
+
+Para salvar n endereços para um usuário, esse endereços são enviados em um array pelo front-end.
+
+Para persistir esse dados, foi criado uma model e uma migration `adonis make:model UserAddress -m`, que irá armazenar os seguintes dados:
+
+```javascript
+  up () {
+    this.create('user_addresses', table => {
+      table.increments()
+      table
+        .integer('user_id')
+        .unsigned()
+        .references('id')
+        .inTable('users')
+        .onUpdate('CASCADE')
+        .onDelete('SET NULL')
+      table.string('street').notNullable()
+      table.integer('number').notNullable()
+      table.string('district')
+      table.string('city').notNullable()
+      table.string('state').notNullable()
+      table.timestamps()
+    })
+  }
+```
+
+Feito isso, deve ser criado o relacionamentode um para muitos na Model user:
+
+```javascript
+  adresses () {
+    return this.hasMany('App/Models/UserAddress')
+  }
+```
+
+Agora no método store de user, basta chamar o relacionamento com user_address e passar um array para createMany(adresses):
+
+```javascript
+  async store ({ request }) {
+    // const data = request.all() seleciona todos os campos do body
+    const data = request.only(['username', 'email', 'password']) // Seleciona username, email e password do body
+    const adresses = request.input('adresses')
+
+    const user = await User.create(data)
+    await user.adresses().createMany(adresses)
+
+    // return json
+    return user
+  }
+```
+
+### Utilizando Transactions
+
+Transactions normalmente são utilizadas quando precisamos executar duas querys em um mesmo model, onde uma depende da outra.
+
+Ex: Cadastro de usuário onde o mesmo tem mais de um endereço enviado num array.
+
+Para utilizar Transactions, basta importar o módulo Database do adonis, e envolver o método Database.beginTransaction().
+
+Ex:
+
+```javascript
+const Database = use('Database')
+
+async store ({ request }) {
+  // const data = request.all() seleciona todos os campos do body
+  const data = request.only(['username', 'email', 'password']) // Seleciona username, email e password do body
+  const adresses = request.input('adresses')
+
+  // Utiliza o transaction para previnir erros no CRUD
+  const trx = await Database.beginTransaction()
+
+  const user = await User.create(data, trx)
+  await user.adresses().createMany(adresses, trx)
+
+  // Se não houver nenhum erro no transaction, ele efetiva a query
+  await trx.commit()
+
+  // return json
+  return user
+}
+```
+
+Isso é o básico do Adonis. Para mais, consulte sua documentação.

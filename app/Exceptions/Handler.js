@@ -53,7 +53,9 @@ class ExceptionHandler extends BaseExceptionHandler {
    *
    * @return {void}
    */
-  // async report (error, { request }) {}
+  async report (error, { request }) {
+    console.log(error)
+  }
 }
 
 module.exports = ExceptionHandler

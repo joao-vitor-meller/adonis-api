@@ -18,6 +18,10 @@ class User extends Model {
     })
   }
 
+  adresses () {
+    return this.hasMany('App/Models/UserAddress')
+  }
+
   /**
    * Trata a questão de relacionamento entre User e Token
    *
